@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LocalTube</title>
+<meta name="theme-color" content="#0f0f0f">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="theme-dark">
+
+<!-- ===================== HEADER ===================== -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button id="menuBtn" class="icon-btn" aria-label="Menu">
+      <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <a href="#/" class="brand">
+      <span class="brand-mark">
+        <svg viewBox="0 0 24 24"><rect x="1" y="4.5" width="22" height="15" rx="4" fill="#FF0000"/><path d="M10 8.5l6 3.5-6 3.5z" fill="#fff"/></svg>
+      </span>
+      <span class="brand-name">LocalTube</span>
+    </a>
+  </div>
+
+  <div class="topbar-mid">
+    <form id="searchForm" class="search-form">
+      <input id="searchInput" type="search" placeholder="Search your videos" autocomplete="off">
+      <button type="submit" class="search-btn" aria-label="Search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" fill="none"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </form>
+  </div>
+
+  <div class="topbar-right">
+    <button id="mobileSearchBtn" class="icon-btn mobile-only" aria-label="Search">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" fill="none"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <button id="shuffleBtn" class="icon-btn" title="Shuffle feed" aria-label="Shuffle feed">
+      <svg viewBox="0 0 24 24"><path d="M17 3l4 4-4 4M3 7h6l2 3M21 17h-6l-2-3M3 17l4 4 4-4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <button id="themeBtn" class="icon-btn desktop-only" title="Toggle theme" aria-label="Toggle theme">
+      <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36A5.4 5.4 0 0112 3z" fill="currentColor"/></svg>
+    </button>
+    <button id="openFolderBtn" class="pill-btn" title="Add a folder of videos">
+      <svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/></svg>
+      <span id="openFolderLabel">Add folder</span>
+    </button>
+  </div>
+</header>
+
+<!-- Mobile full-width search overlay -->
+<div id="mobileSearchBar" class="mobile-search-bar hidden">
+  <button id="mobileSearchBack" class="icon-btn" aria-label="Close search">
+    <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+  <input id="mobileSearchInput" type="search" placeholder="Search your videos" autocomplete="off">
+</div>
+
+<!-- ===================== SIDEBAR (desktop) ===================== -->
+<aside id="sidebar" class="sidebar">
+  <nav>
+    <a href="#/" class="side-item active" data-view="home">
+      <svg viewBox="0 0 24 24"><path d="M4 11.5L12 4l8 7.5M6 10v9h12v-9" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/></svg>
+      <span>Home</span>
+    </a>
+    <a href="#/library" class="side-item" data-view="library">
+      <svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <span>Library</span>
+    </a>
+    <a href="#/history" class="side-item" data-view="history">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="none"/><path d="M12 7v5l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <span>History</span>
+    </a>
+  </nav>
+  <div class="side-divider"></div>
+  <nav id="sidePlaylists">
+    <a href="#/playlist/liked" class="side-item" data-view="playlist-liked">
+      <svg viewBox="0 0 24 24"><path d="M7 10v11H3V10h4zm4 11h7.4a2 2 0 002-1.6l1.4-7A2 2 0 0019.8 10H14V5a2 2 0 00-2-2l-1 6-4 4v8z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></svg>
+      <span>Liked videos</span>
+    </a>
+    <a href="#/playlist/watchlater" class="side-item" data-view="playlist-watchlater">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="none"/><path d="M12 7v5l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <span>Watch later</span>
+    </a>
+  </nav>
+  <div id="sideCustomPlaylists"></div>
+  <div class="side-divider"></div>
+  <nav>
+    <a href="#/folders" class="side-item" data-view="folders">
+      <svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/></svg>
+      <span>Folders</span>
+    </a>
+    <a href="#/settings" class="side-item" data-view="settings">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></svg>
+      <span>Settings</span>
+    </a>
+  </nav>
+  <div class="side-divider"></div>
+  <div class="side-note">Videos load from your own device. Nothing is uploaded anywhere.</div>
+</aside>
+
+<!-- ===================== MAIN ===================== -->
+<main id="main">
+
+  <!-- Empty state: no library loaded yet -->
+  <section id="emptyState" class="empty-state">
+    <div class="empty-inner">
+      <svg viewBox="0 0 24 24" class="empty-icon"><rect x="1" y="4.5" width="22" height="15" rx="4" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M10 8.5l6 3.5-6 3.5z" fill="currentColor"/></svg>
+      <h1>Your local video library</h1>
+      <p id="emptyStateText">Point LocalTube at a folder on this device and it'll build a YouTube-style feed out of what's inside — nothing leaves your computer.</p>
+      <div class="empty-actions">
+        <button id="emptyStateBtn" class="pill-btn big">Choose folder</button>
+        <button id="emptyStateFilesBtn" class="pill-btn big ghost">Choose videos</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Home feed -->
+  <section id="homeView" class="view hidden">
+    <div id="chipRow" class="chip-row"></div>
+    <div id="shortsShelf" class="shorts-shelf hidden">
+      <div class="shorts-shelf-title">
+        <svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3" fill="#FF0000"/><path d="M10.5 8l5 4-5 4z" fill="#fff"/></svg>
+        <span>Shorts</span>
+      </div>
+      <div id="shortsRow" class="shorts-row"></div>
+    </div>
+    <div id="videoGrid" class="video-grid"></div>
+  </section>
+
+  <!-- Library / History -->
+  <section id="libraryView" class="view hidden">
+    <h2 class="section-title">Library</h2>
+    <div id="libraryGrid" class="video-grid list-style"></div>
+  </section>
+  <section id="historyView" class="view hidden">
+    <h2 class="section-title">Watch history</h2>
+    <div id="historyGrid" class="video-grid list-style"></div>
+  </section>
+
+  <!-- Channel page (a folder, treated as a "channel") -->
+  <section id="channelView" class="view hidden">
+    <div class="channel-header">
+      <div class="channel-header-avatar" id="channelAvatar"></div>
+      <div>
+        <h2 id="channelName" class="channel-header-name"></h2>
+        <div id="channelCount" class="channel-header-count"></div>
+      </div>
+    </div>
+    <div id="channelGrid" class="video-grid list-style"></div>
+  </section>
+
+  <!-- Folders management page -->
+  <section id="foldersView" class="view hidden">
+    <h2 class="section-title">Folders</h2>
+    <div class="folders-add-row">
+      <button id="foldersAddBtn" class="pill-btn">
+        <svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/></svg>
+        <span>Add folder</span>
+      </button>
+      <button id="foldersAddFilesBtn" class="pill-btn ghost">
+        <span>Add videos</span>
+      </button>
+    </div>
+    <div id="foldersList" class="folders-list"></div>
+  </section>
+
+  <!-- Playlist page (liked / watch later / custom) -->
+  <section id="playlistView" class="view hidden">
+    <div class="playlist-header">
+      <h2 id="playlistName" class="section-title"></h2>
+      <button id="playlistDeleteBtn" class="pill-btn ghost hidden">Delete playlist</button>
+    </div>
+    <div id="playlistGrid" class="video-grid list-style"></div>
+  </section>
+
+  <!-- Settings page -->
+  <section id="settingsView" class="view hidden">
+    <h2 class="section-title">Settings</h2>
+    <div class="settings-list">
+      <div class="settings-row">
+        <div><div class="settings-row-title">Dark theme</div><div class="settings-row-sub">Match the classic YouTube dark mode</div></div>
+        <button id="settingThemeToggle" class="text-toggle on settings-toggle"><span class="toggle-track"><span class="toggle-knob"></span></span></button>
+      </div>
+      <div class="settings-row">
+        <div><div class="settings-row-title">Autoplay</div><div class="settings-row-sub">Automatically play the next video</div></div>
+        <button id="settingAutoplayToggle" class="text-toggle on settings-toggle"><span class="toggle-track"><span class="toggle-knob"></span></span></button>
+      </div>
+      <div class="settings-section-title">Fullscreen gestures (mobile)</div>
+      <div class="settings-row">
+        <div><div class="settings-row-title">Swipe right side for volume</div><div class="settings-row-sub">Drag up/down on the right half of the player</div></div>
+        <button id="settingVolumeGesture" class="text-toggle on settings-toggle"><span class="toggle-track"><span class="toggle-knob"></span></span></button>
+      </div>
+      <div class="settings-row">
+        <div><div class="settings-row-title">Swipe left side for brightness</div><div class="settings-row-sub">Dims/brightens the player only — browsers can't control your actual screen backlight</div></div>
+        <button id="settingBrightnessGesture" class="text-toggle on settings-toggle"><span class="toggle-track"><span class="toggle-knob"></span></span></button>
+      </div>
+      <div class="settings-row">
+        <div><div class="settings-row-title">Double-tap to seek</div><div class="settings-row-sub">Double-tap the left/right edge to rewind/skip 10s</div></div>
+        <button id="settingDoubleTap" class="text-toggle on settings-toggle"><span class="toggle-track"><span class="toggle-knob"></span></span></button>
+      </div>
+      <div class="settings-section-title">Storage</div>
+      <div class="settings-row">
+        <div><div class="settings-row-title">Clear watch history</div><div class="settings-row-sub">Removes your history list only, not your videos</div></div>
+        <button id="settingClearHistory" class="pill-btn ghost">Clear</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Watch page -->
+  <section id="watchView" class="view hidden">
+    <div class="watch-layout">
+      <div class="watch-main">
+        <div id="playerWrap" class="player-wrap">
+          <video id="videoEl" playsinline></video>
+
+          <!-- gesture overlay -->
+          <div id="gestureLayer" class="gesture-layer">
+            <div id="seekRippleLeft" class="seek-ripple left">
+              <svg viewBox="0 0 24 24"><path d="M11 17l-5-5 5-5M18 17l-5-5 5-5" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span id="seekRippleLeftLabel">10s</span>
+            </div>
+            <div id="seekRippleRight" class="seek-ripple right">
+              <svg viewBox="0 0 24 24"><path d="M13 17l5-5-5-5M6 17l5-5-5-5" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span id="seekRippleRightLabel">10s</span>
+            </div>
+            <div id="gestureIndicator" class="gesture-indicator hidden">
+              <svg id="gestureIndicatorIcon" viewBox="0 0 24 24"></svg>
+              <div class="gesture-indicator-track"><div id="gestureIndicatorFill" class="gesture-indicator-fill"></div></div>
+              <span id="gestureIndicatorValue">50%</span>
+            </div>
+            <div id="brightnessOverlay" class="brightness-overlay"></div>
+          </div>
+
+          <!-- 404 / unavailable state -->
+          <div id="playerError" class="player-error hidden">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M9 9l6 6M15 9l-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            <div class="player-error-title">This video can't be played</div>
+            <div class="player-error-sub" id="playerErrorSub">It may have been moved, renamed, or its folder hasn't been reconnected.</div>
+            <button id="playerErrorBack" class="ghost-btn">Go back</button>
+          </div>
+
+          <div id="autoplayOverlay" class="autoplay-overlay hidden">
+            <div class="autoplay-card">
+              <div class="autoplay-thumb"><img id="autoplayThumb" alt=""></div>
+              <div class="autoplay-text">Up next</div>
+              <div class="autoplay-title" id="autoplayTitle"></div>
+              <svg class="autoplay-ring" viewBox="0 0 40 40">
+                <circle cx="20" cy="20" r="18" stroke="#3f3f3f" stroke-width="3" fill="none"/>
+                <circle id="autoplayRingProgress" cx="20" cy="20" r="18" stroke="#fff" stroke-width="3" fill="none" stroke-dasharray="113" stroke-dashoffset="0" transform="rotate(-90 20 20)"/>
+              </svg>
+              <button id="cancelAutoplay" class="ghost-btn">Cancel</button>
+            </div>
+          </div>
+
+          <!-- swipe-up hint + recommendations sheet (mobile fullscreen) -->
+          <div id="swipeUpHint" class="swipe-up-hint">
+            <div class="swipe-up-chevron"></div>
+          </div>
+          <div id="recsSheet" class="recs-sheet">
+            <div class="recs-sheet-handle"></div>
+            <div class="recs-sheet-title">Recommendations</div>
+            <div id="recsSheetList" class="recs-sheet-list"></div>
+          </div>
+
+          <div id="playerControls" class="player-controls">
+            <div id="progressBar" class="progress-bar">
+              <div id="progressBuffered" class="progress-buffered"></div>
+              <div id="progressPlayed" class="progress-played"></div>
+              <div id="progressThumb" class="progress-thumb"></div>
+            </div>
+            <div class="controls-row">
+              <div class="controls-left">
+                <button id="playPauseBtn" class="icon-btn ctrl" aria-label="Play/Pause">
+                  <svg id="iconPlay" viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z" fill="currentColor"/></svg>
+                  <svg id="iconPause" viewBox="0 0 24 24" class="hidden"><rect x="5" y="4" width="5" height="16" fill="currentColor"/><rect x="14" y="4" width="5" height="16" fill="currentColor"/></svg>
+                </button>
+                <button id="nextBtn" class="icon-btn ctrl" aria-label="Next video">
+                  <svg viewBox="0 0 24 24"><path d="M5 4l12 8-12 8z" fill="currentColor"/><rect x="18" y="4" width="2" height="16" fill="currentColor"/></svg>
+                </button>
+                <div class="vol-wrap desktop-only">
+                  <button id="muteBtn" class="icon-btn ctrl" aria-label="Mute">
+                    <svg id="iconVolHigh" viewBox="0 0 24 24"><path d="M4 9v6h4l5 5V4L8 9H4z" fill="currentColor"/><path d="M16 8a5 5 0 010 8M18.5 5.5a9 9 0 010 13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+                    <svg id="iconVolMute" viewBox="0 0 24 24" class="hidden"><path d="M4 9v6h4l5 5V4L8 9H4z" fill="currentColor"/><path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                  </button>
+                  <input id="volSlider" type="range" min="0" max="1" step="0.01" value="1">
+                </div>
+                <div id="timeDisplay" class="time-display">0:00 / 0:00</div>
+              </div>
+              <div class="controls-right">
+                <button id="autoplayToggle" class="text-toggle on desktop-only" aria-label="Toggle autoplay">
+                  <span class="toggle-track"><span class="toggle-knob"></span></span>
+                  <span class="toggle-label">Autoplay</span>
+                </button>
+                <button id="pipBtn" class="icon-btn ctrl desktop-only" aria-label="Mini player">
+                  <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="1.5" stroke="currentColor" stroke-width="2" fill="none"/><rect x="11" y="10" width="8" height="6" rx="1" fill="currentColor"/></svg>
+                </button>
+                <button id="moreBtn" class="icon-btn ctrl mobile-only" aria-label="More options">
+                  <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="19" cy="12" r="1.8" fill="currentColor"/></svg>
+                </button>
+                <button id="fullscreenBtn" class="icon-btn ctrl" aria-label="Fullscreen">
+                  <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h1 id="watchTitle" class="watch-title"></h1>
+
+        <div class="watch-meta-row">
+          <a href="#/" id="watchChannelLink" class="channel-block">
+            <div class="avatar" id="watchAvatar"></div>
+            <div>
+              <div class="channel-name" id="watchChannel"></div>
+              <div class="channel-sub" id="watchFileMeta"></div>
+            </div>
+          </a>
+          <div class="watch-actions">
+            <button class="action-btn" id="likeBtn">
+              <svg viewBox="0 0 24 24"><path d="M7 10v11H3V10h4zm4 11h7.4a2 2 0 002-1.6l1.4-7A2 2 0 0019.8 10H14V5a2 2 0 00-2-2l-1 6-4 4v8z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></svg>
+              <span>Like</span>
+            </button>
+            <button class="action-btn" id="saveBtn">
+              <svg viewBox="0 0 24 24"><path d="M6 4h12v16l-6-4-6 4V4z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></svg>
+              <span>Save</span>
+            </button>
+            <button class="action-btn" id="shareBtn">
+              <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="2.4" stroke="currentColor" stroke-width="1.6" fill="none"/><circle cx="6" cy="12" r="2.4" stroke="currentColor" stroke-width="1.6" fill="none"/><circle cx="18" cy="19" r="2.4" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4" stroke="currentColor" stroke-width="1.6"/></svg>
+              <span>Share</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="description-box" id="descriptionBox">
+          <div id="descriptionText" class="description-text"></div>
+        </div>
+      </div>
+
+      <div class="watch-side">
+        <div class="up-next-row">
+          <span>Up next</span>
+          <button id="autoplayToggleSide" class="text-toggle on" aria-label="Toggle autoplay">
+            <span class="toggle-track"><span class="toggle-knob"></span></span>
+            <span class="toggle-label">Autoplay</span>
+          </button>
+        </div>
+        <div id="upNextList" class="up-next-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Scanning progress -->
+  <div id="scanToast" class="scan-toast hidden">
+    <div class="spinner"></div>
+    <span id="scanToastText">Scanning folder…</span>
+  </div>
+</main>
+
+<!-- Save-to-playlist bottom sheet / modal -->
+<div id="saveModalBackdrop" class="modal-backdrop hidden">
+  <div id="saveModal" class="save-modal">
+    <div class="save-modal-title">Save to…</div>
+    <div id="saveModalList" class="save-modal-list"></div>
+    <div class="save-modal-newrow">
+      <input id="newPlaylistInput" type="text" placeholder="Create new playlist">
+      <button id="newPlaylistBtn" class="pill-btn">Create</button>
+    </div>
+    <button id="saveModalClose" class="ghost-btn full">Done</button>
+  </div>
+</div>
+
+<!-- Mobile "more options" bottom sheet for the player -->
+<div id="moreSheetBackdrop" class="modal-backdrop hidden">
+  <div id="moreSheet" class="more-sheet">
+    <div class="settings-row">
+      <div class="settings-row-title">Autoplay</div>
+      <button id="autoplayToggleSheet" class="text-toggle on settings-toggle"><span class="toggle-track"><span class="toggle-knob"></span></span></button>
+    </div>
+    <a href="#/settings" id="moreSheetSettingsLink" class="settings-row settings-row-link">
+      <div class="settings-row-title">Player settings</div>
+      <svg viewBox="0 0 24 24" width="18" height="18"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </div>
+</div>
+
+<!-- Mini player (floating, shown when leaving the watch page mid-playback) -->
+<div id="miniPlayer" class="mini-player hidden">
+  <div id="miniPlayerSlot" class="mini-player-slot"></div>
+  <div class="mini-player-info">
+    <div id="miniPlayerTitle" class="mini-player-title"></div>
+    <div id="miniPlayerChannel" class="mini-player-channel"></div>
+  </div>
+  <button id="miniPlayPause" class="icon-btn" aria-label="Play/Pause">
+    <svg id="miniIconPlay" viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z" fill="currentColor"/></svg>
+    <svg id="miniIconPause" viewBox="0 0 24 24" class="hidden"><rect x="5" y="4" width="5" height="16" fill="currentColor"/><rect x="14" y="4" width="5" height="16" fill="currentColor"/></svg>
+  </button>
+  <button id="miniClose" class="icon-btn" aria-label="Close">
+    <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+  </button>
+</div>
+
+<!-- Mobile bottom nav -->
+<nav id="mobileNav" class="mobile-nav">
+  <a href="#/" class="mnav-item active" data-view="home">
+    <svg viewBox="0 0 24 24"><path d="M4 11.5L12 4l8 7.5M6 10v9h12v-9" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/></svg>
+    <span>Home</span>
+  </a>
+  <a href="#/history" class="mnav-item" data-view="history">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="none"/><path d="M12 7v5l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <span>History</span>
+  </a>
+  <button id="mnavAdd" class="mnav-item mnav-add">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M12 8v8M8 12h8" stroke="#0f0f0f" stroke-width="2" stroke-linecap="round"/></svg>
+    <span>Add</span>
+  </button>
+  <a href="#/library" class="mnav-item" data-view="library">
+    <svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <span>Library</span>
+  </a>
+  <a href="#/settings" class="mnav-item" data-view="settings">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></svg>
+    <span>Settings</span>
+  </a>
+</nav>
+
+<!-- hidden native inputs -->
+<input type="file" id="fileInput" accept="video/*" multiple style="display:none">
+<input type="file" id="folderInputFallback" webkitdirectory multiple style="display:none">
+
+<script src="js/db.js"></script>
+<script src="js/scanner.js"></script>
+<script src="js/player.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
