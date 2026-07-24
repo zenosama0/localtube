@@ -6,7 +6,7 @@
 // string is what makes the browser notice this file is "different" and
 // install a fresh service worker — without that, fetch handlers below would
 // keep serving whatever got cached on the very first visit, forever.
-const CACHE_NAME = 'localtube-shell-v2';
+const CACHE_NAME = 'localtube-shell-v3';
 const SHELL_FILES = [
   './',
   './index.html',

@@ -514,6 +514,47 @@
 
   function setAutoplayOverlay(show) { autoplayOverlay.classList.toggle('hidden', !show); }
 
+  /* ---- Media Session (Android/desktop system media controls & lock screen) ---- */
+  let mediaSessionArtworkUrl = null;
+  async function updateMediaSession(entry, videoEl, { onNext, onPrev } = {}) {
+    if (!('mediaSession' in navigator)) return;
+    let artwork = [];
+    if (entry.thumb) {
+      try {
+        if (mediaSessionArtworkUrl) URL.revokeObjectURL(mediaSessionArtworkUrl);
+        const blob = await (await fetch(entry.thumb)).blob();
+        mediaSessionArtworkUrl = URL.createObjectURL(blob);
+        // Data URLs render inconsistently in Android's system media notification;
+        // a blob: URL is what actually gets the thumbnail to show up there.
+        artwork = [{ src: mediaSessionArtworkUrl, sizes: '320x180', type: blob.type || 'image/jpeg' }];
+      } catch (e) { /* thumbnail not ready yet — notification will just show the app icon */ }
+    }
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: niceTitle(entry.name), artist: entry.folder || 'Device', album: 'LocalTube', artwork
+      });
+    } catch (e) {}
+    const set = (action, handler) => { try { navigator.mediaSession.setActionHandler(action, handler); } catch (e) {} };
+    set('play', () => videoEl.play().catch(() => {}));
+    set('pause', () => videoEl.pause());
+    set('seekbackward', (d) => { videoEl.currentTime = Math.max(0, videoEl.currentTime - (d.seekOffset || 10)); });
+    set('seekforward', (d) => { videoEl.currentTime = Math.min(videoEl.duration || Infinity, videoEl.currentTime + (d.seekOffset || 10)); });
+    set('seekto', (d) => { if (d.seekTime != null) videoEl.currentTime = d.seekTime; });
+    set('previoustrack', onPrev || null);
+    set('nexttrack', onNext || null);
+  }
+  function wireMediaSessionPlaybackTracking(videoEl) {
+    videoEl.addEventListener('play', () => { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'; });
+    videoEl.addEventListener('pause', () => { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; });
+    videoEl.addEventListener('timeupdate', () => {
+      if (!('mediaSession' in navigator) || !navigator.mediaSession.setPositionState) return;
+      const d = videoEl.duration;
+      if (!d || !isFinite(d)) return;
+      try { navigator.mediaSession.setPositionState({ duration: d, playbackRate: videoEl.playbackRate || 1, position: Math.min(videoEl.currentTime, d) }); } catch (e) {}
+    });
+  }
+  wireMediaSessionPlaybackTracking(player.el);
+
   async function playEntry(entry) {
     if (miniActive && currentEntry && currentEntry.id === entry.id) { exitMiniPlayerBackToWatch(); return; }
     currentEntry = entry;
@@ -542,6 +583,7 @@
         const file = await LTScanner.getEntryFile(entry);
         currentObjectUrl = URL.createObjectURL(file);
         player.load(currentObjectUrl);
+        updateMediaSession(entry, player.el, { onNext: () => playNext(), onPrev: () => history.back() });
       } catch (e) {
         player.el.removeAttribute('src');
         player.showError('This file could not be opened. It may have been moved, renamed, or deleted.');
@@ -619,6 +661,7 @@
       const fill = item.querySelector('.shorts-item-progress-fill');
       if (video.duration) fill.style.width = ((video.currentTime / video.duration) * 100) + '%';
     });
+    wireMediaSessionPlaybackTracking(video);
 
     const likeBtn = item.querySelector('.shorts-like-btn');
     likeBtn.classList.toggle('active', isInPlaylist('liked', entry.id));
@@ -651,6 +694,10 @@
       shortsMuted = true;
       updateShortsMuteIcon();
       video.play().catch(() => {});
+    });
+    updateMediaSession(entry, video, {
+      onNext: () => shortsFeed.scrollBy({ top: shortsFeed.clientHeight, behavior: 'smooth' }),
+      onPrev: () => idx > 0 ? shortsFeed.scrollBy({ top: -shortsFeed.clientHeight, behavior: 'smooth' }) : history.back()
     });
     pushHistory(entry);
     // preload immediate neighbors
