@@ -623,7 +623,7 @@
       save: '<path d="M6 4h12v16l-6-4-6 4V4z" stroke="#fff" stroke-width="1.8" fill="none" stroke-linejoin="round"/>',
       share: '<circle cx="18" cy="5" r="2.4" stroke="#fff" stroke-width="1.6" fill="none"/><circle cx="6" cy="12" r="2.4" stroke="#fff" stroke-width="1.6" fill="none"/><circle cx="18" cy="19" r="2.4" stroke="#fff" stroke-width="1.6" fill="none"/><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4" stroke="#fff" stroke-width="1.6"/>'
     };
-    return icons[name] || '';
+    return `<svg viewBox="0 0 24 24">${icons[name] || ''}</svg>`;
   }
 
   function buildShortsItem(entry, idx) {
@@ -834,6 +834,7 @@
       const id = decodeURIComponent(hash.slice('#/shorts/'.length));
       const entry = libraryById.get(id);
       if (!entry) { location.hash = lastNonShortsHash; return; }
+      player.pause();
       Object.values(views).forEach(v => v.classList.add('hidden'));
       emptyState.classList.add('hidden');
       shortsReturnHash = lastNonShortsHash;
