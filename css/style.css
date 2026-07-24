@@ -61,8 +61,9 @@ svg{ width:100%; height:100%; display:block; }
 
 /* ============ TOP BAR ============ */
 .topbar{
-  position:fixed; top:0; left:0; right:0; height:var(--header-h);
+  position:fixed; top:0; left:0; right:0; height:calc(var(--header-h) + env(safe-area-inset-top, 0px));
   display:flex; align-items:center; gap:8px; padding:0 16px;
+  padding-top:env(safe-area-inset-top, 0px);
   background:var(--bg-elevated); z-index:100; border-bottom:1px solid transparent;
 }
 .theme-light .topbar{ border-bottom:1px solid var(--border); }
@@ -106,8 +107,9 @@ svg{ width:100%; height:100%; display:block; }
 
 /* mobile search overlay */
 .mobile-search-bar{
-  position:fixed; top:0; left:0; right:0; height:var(--header-h); z-index:110;
+  position:fixed; top:0; left:0; right:0; height:calc(var(--header-h) + env(safe-area-inset-top, 0px)); z-index:110;
   background:var(--bg-elevated); display:flex; align-items:center; gap:8px; padding:0 8px;
+  padding-top:env(safe-area-inset-top, 0px);
 }
 .mobile-search-bar input{
   flex:1; height:38px; border-radius:19px; border:1px solid var(--input-border); background:var(--input-bg);
@@ -116,7 +118,7 @@ svg{ width:100%; height:100%; display:block; }
 
 /* ============ SIDEBAR ============ */
 .sidebar{
-  position:fixed; top:var(--header-h); left:0; bottom:0; width:var(--sidebar-w);
+  position:fixed; top:calc(var(--header-h) + env(safe-area-inset-top, 0px)); left:0; bottom:0; width:var(--sidebar-w);
   background:var(--bg); overflow-y:auto; padding:12px; z-index:90;
   transition:transform .18s ease, width .18s ease;
 }
@@ -136,7 +138,8 @@ body.sidebar-collapsed .side-note, body.sidebar-collapsed .side-divider{ display
 
 /* ============ MAIN LAYOUT ============ */
 main{
-  margin-top:var(--header-h); margin-left:var(--sidebar-w); min-height:calc(100vh - var(--header-h));
+  margin-top:calc(var(--header-h) + env(safe-area-inset-top, 0px)); margin-left:var(--sidebar-w);
+  min-height:calc(100vh - var(--header-h) - env(safe-area-inset-top, 0px));
   padding:24px; transition:margin-left .18s ease;
 }
 body.sidebar-collapsed main{ margin-left:var(--sidebar-w-collapsed); }
@@ -277,8 +280,9 @@ body.sidebar-collapsed main{ margin-left:var(--sidebar-w-collapsed); }
 .avatar{ width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,#ff5f5f,#ffb14e); flex:0 0 40px; }
 .channel-name{ font-size:14px; font-weight:600; }
 .channel-sub{ font-size:12px; color:var(--text-secondary); }
-.watch-actions{ display:flex; gap:8px; }
-.action-btn{ display:flex; align-items:center; gap:6px; background:var(--chip-bg); border:none; color:var(--text); height:36px; padding:0 16px; border-radius:18px; font-size:14px; font-weight:500; }
+.watch-actions{ display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; }
+.watch-actions::-webkit-scrollbar{ display:none; }
+.action-btn{ flex:0 0 auto; display:flex; align-items:center; gap:6px; background:var(--chip-bg); border:none; color:var(--text); height:36px; padding:0 16px; border-radius:18px; font-size:14px; font-weight:500; }
 .action-btn svg{ width:18px; height:18px; }
 .action-btn:hover{ background:var(--bg-card-hover); }
 .action-btn.active{ color:#3ea6ff; }
@@ -513,21 +517,23 @@ body.shorts-active .topbar, body.shorts-active .sidebar, body.shorts-active .mob
   .brand-name{ font-size:17px; }
   #menuBtn{ display:none; }
   .pill-btn span{ display:none; }
-  .pill-btn{ width:36px; height:36px; padding:0; justify-content:center; border-radius:50%; border:none; }
+  .pill-btn{ width:40px; height:40px; padding:0; justify-content:center; border-radius:50%; border:none; }
   .pill-btn svg{ width:20px; height:20px; }
 
   .sidebar{ display:none; }
   main{ margin-left:0; padding:8px 8px 74px; }
   body.sidebar-collapsed main{ margin-left:0; }
 
-  .video-grid{ grid-template-columns:1fr; gap:20px 0; }
+  .video-grid{ grid-template-columns:1fr; gap:22px 0; }
   .thumb-wrap{ border-radius:0; }
-  .card-body{ padding:0 4px; }
+  .card-body{ padding:0 12px; gap:12px; }
+  .card-avatar{ width:40px; height:40px; flex:0 0 40px; font-size:15px; }
 
   .list-style .video-card{ flex-direction:column; }
   .list-style .thumb-wrap{ width:100%; flex:none; }
 
   .chip-row{ padding:10px 0; }
+  .chip{ height:36px; padding:0 14px; }
   .short-card{ width:130px; }
   .short-thumb-wrap{ width:130px; border-radius:10px; }
   .shorts-grid{ grid-template-columns:repeat(auto-fill, minmax(120px,1fr)); }
@@ -545,6 +551,11 @@ body.shorts-active .topbar, body.shorts-active .sidebar, body.shorts-active .mob
   .watch-title{ font-size:16px; }
   .up-next-card .thumb-wrap{ width:140px; flex:0 0 140px; }
 
+  /* channel row and action chips get their own clean rows instead of wrapping mid-line */
+  .watch-meta-row{ flex-direction:column; align-items:stretch; gap:12px; }
+  .channel-block{ width:100%; }
+  .watch-actions{ width:100%; margin:0 -12px; padding:0 12px; }
+
   /* bigger, thumb-friendly controls */
   .ctrl{ width:44px; height:44px; padding:10px; }
   .progress-bar{ height:22px; }
@@ -552,12 +563,21 @@ body.shorts-active .topbar, body.shorts-active .sidebar, body.shorts-active .mob
 
   .mobile-nav{
     display:flex; position:fixed; left:0; right:0; bottom:0; height:var(--mnav-h); z-index:150;
-    background:var(--bg-elevated); border-top:1px solid var(--border); padding-bottom:env(safe-area-inset-bottom);
+    background:var(--bg-elevated); border-top:1px solid var(--border); padding-bottom:env(safe-area-inset-bottom, 0px);
   }
   .mnav-item{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; color:var(--text-secondary); font-size:10px; background:none; border:none; }
   .mnav-item svg{ width:22px; height:22px; }
   .mnav-item.active{ color:var(--text); }
-  .mnav-add svg{ color:var(--text); }
+
+  /* elevated "Add" button, distinct from the plain nav destinations */
+  .mnav-add{ position:relative; color:var(--text-secondary); }
+  .mnav-add-circle{
+    width:40px; height:40px; border-radius:50%; background:var(--red); display:flex; align-items:center; justify-content:center;
+    margin-top:-18px; box-shadow:0 3px 10px rgba(255,0,0,.4), 0 1px 4px rgba(0,0,0,.35); transition:transform .1s ease;
+  }
+  .mnav-add-circle svg{ width:20px; height:20px; }
+  .mnav-add:active .mnav-add-circle{ transform:scale(.9); }
+  .mnav-add span:last-child{ margin-top:3px; }
 
   .empty-state{ min-height:60vh; }
   .empty-actions{ flex-direction:column; width:100%; padding:0 24px; }
@@ -565,9 +585,12 @@ body.shorts-active .topbar, body.shorts-active .sidebar, body.shorts-active .mob
   .empty-actions .pill-btn span{ display:inline; }
 
   .mini-player{ left:8px; right:8px; width:auto; bottom:calc(var(--mnav-h) + 10px); }
-
-  /* gesture layer is mobile-only in practice, but keep desktop safe by gating with JS too */
 }
+
+/* subtle fade/slide when switching views — replayed each time showView()
+   re-adds this class, skipped entirely under prefers-reduced-motion */
+@keyframes viewFadeIn{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
+.view-enter{ animation:viewFadeIn .22s ease; }
 
 /* small phones */
 @media (max-width:420px){

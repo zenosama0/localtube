@@ -807,6 +807,12 @@
   /* ================= Routing ================= */
   function showView(name) {
     Object.entries(views).forEach(([k, el]) => el.classList.toggle('hidden', k !== name));
+    const active = views[name];
+    if (active) {
+      active.classList.remove('view-enter');
+      void active.offsetWidth; // force reflow so the animation replays every time
+      active.classList.add('view-enter');
+    }
     emptyState.classList.add('hidden');
     document.querySelectorAll('.side-item, .mnav-item').forEach(el => el.classList.toggle('active', el.dataset.view === name));
   }
