@@ -157,7 +157,7 @@
         <span class="short-views">${fakeViews(entry)}</span>
         <div class="short-title">${escapeHtml(niceTitle(entry.name))}</div>
       </div>`;
-    card.addEventListener('click', () => { location.hash = `#/watch/${encodeURIComponent(entry.id)}`; });
+    card.addEventListener('click', () => { location.hash = `#/shorts/${encodeURIComponent(entry.id)}`; });
     if (!entry.thumb) thumbObserver.observe(card.querySelector('.short-thumb-wrap'));
     return card;
   }
@@ -555,6 +555,189 @@
   }
   player.onErrorBack = () => history.back();
 
+  /* ================= Shorts player (TikTok/Reels-style vertical feed) ================= */
+  const shortsPlayerView = $('shortsPlayerView');
+  const shortsFeed = $('shortsFeed');
+  let shortsQueue = [];
+  let shortsIndex = 0;
+  let shortsMuted = false;
+  let shortsReturnHash = '#/';
+  const shortsItemObserver = new IntersectionObserver((entries) => {
+    entries.forEach((obs) => {
+      const item = obs.target;
+      const idx = Number(item.dataset.idx);
+      if (obs.isIntersecting && obs.intersectionRatio > 0.6) {
+        shortsIndex = idx;
+        activateShortsItem(idx);
+      } else {
+        deactivateShortsItem(idx);
+      }
+    });
+  }, { root: shortsFeed, threshold: [0, 0.6] });
+
+  function shortsRailSvg(name) {
+    const icons = {
+      like: '<path d="M7 10v11H3V10h4zm4 11h7.4a2 2 0 002-1.6l1.4-7A2 2 0 0019.8 10H14V5a2 2 0 00-2-2l-1 6-4 4v8z" stroke="#fff" stroke-width="1.6" fill="none" stroke-linejoin="round"/>',
+      save: '<path d="M6 4h12v16l-6-4-6 4V4z" stroke="#fff" stroke-width="1.8" fill="none" stroke-linejoin="round"/>',
+      share: '<circle cx="18" cy="5" r="2.4" stroke="#fff" stroke-width="1.6" fill="none"/><circle cx="6" cy="12" r="2.4" stroke="#fff" stroke-width="1.6" fill="none"/><circle cx="18" cy="19" r="2.4" stroke="#fff" stroke-width="1.6" fill="none"/><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4" stroke="#fff" stroke-width="1.6"/>'
+    };
+    return icons[name] || '';
+  }
+
+  function buildShortsItem(entry, idx) {
+    const item = document.createElement('div');
+    item.className = 'shorts-item';
+    item.dataset.idx = String(idx);
+    item.dataset.id = entry.id;
+    const letter = (entry.folder || entry.name || 'L').replace(/^\W+/, '')[0]?.toUpperCase() || 'L';
+    item.innerHTML = `
+      <div class="shorts-item-progress"><div class="shorts-item-progress-fill"></div></div>
+      <video muted playsinline loop preload="none" poster="${entry.thumb || ''}"></video>
+      <div class="shorts-tap-layer"></div>
+      <div class="shorts-center-play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z" fill="currentColor"/></svg></div>
+      <div class="shorts-info">
+        <div class="shorts-info-channel" data-folder="${escapeHtml(entry.folder || 'Device')}">
+          <div class="shorts-info-avatar" style="background:${avatarColor(entry.folder || entry.name)};display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;">${letter}</div>
+          <span class="shorts-info-channel-name">${escapeHtml(entry.folder || 'Device')}</span>
+        </div>
+        <div class="shorts-info-title">${escapeHtml(niceTitle(entry.name))}</div>
+      </div>
+      <div class="shorts-rail">
+        <button class="shorts-rail-btn shorts-like-btn"><span class="shorts-rail-circle">${shortsRailSvg('like')}</span><span class="shorts-rail-count">Like</span></button>
+        <button class="shorts-rail-btn shorts-save-btn"><span class="shorts-rail-circle">${shortsRailSvg('save')}</span><span class="shorts-rail-count">Save</span></button>
+        <button class="shorts-rail-btn shorts-share-btn"><span class="shorts-rail-circle">${shortsRailSvg('share')}</span><span class="shorts-rail-count">Share</span></button>
+      </div>`;
+
+    item.querySelector('.shorts-info-channel').addEventListener('click', () => { location.hash = channelHash(entry.folder); });
+    const video = item.querySelector('video');
+    const centerPlay = item.querySelector('.shorts-center-play');
+    item.querySelector('.shorts-tap-layer').addEventListener('click', () => {
+      if (video.paused) { video.play().catch(() => {}); centerPlay.classList.remove('show'); }
+      else { video.pause(); centerPlay.classList.add('show'); }
+    });
+    video.addEventListener('timeupdate', () => {
+      const fill = item.querySelector('.shorts-item-progress-fill');
+      if (video.duration) fill.style.width = ((video.currentTime / video.duration) * 100) + '%';
+    });
+
+    const likeBtn = item.querySelector('.shorts-like-btn');
+    likeBtn.classList.toggle('active', isInPlaylist('liked', entry.id));
+    likeBtn.addEventListener('click', async () => { await togglePlaylist('liked', entry); likeBtn.classList.toggle('active', isInPlaylist('liked', entry.id)); });
+    const saveBtn = item.querySelector('.shorts-save-btn');
+    saveBtn.classList.toggle('active', isInPlaylist('watchlater', entry.id));
+    saveBtn.addEventListener('click', () => openSaveModal(entry));
+    item.querySelector('.shorts-share-btn').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(`${location.origin}${location.pathname}#/shorts/${encodeURIComponent(entry.id)}`); } catch (e) {}
+    });
+    return item;
+  }
+
+  async function activateShortsItem(idx) {
+    const item = shortsFeed.children[idx];
+    if (!item) return;
+    const entry = shortsQueue[idx];
+    const video = item.querySelector('video');
+    if (!item.classList.contains('has-src') && entry && entry.kind) {
+      try {
+        const file = await LTScanner.getEntryFile(entry);
+        video.src = URL.createObjectURL(file);
+        item.classList.add('has-src');
+        video._objectUrl = video.src;
+      } catch (e) { return; }
+    }
+    video.muted = shortsMuted;
+    video.play().catch(() => {
+      video.muted = true;
+      shortsMuted = true;
+      updateShortsMuteIcon();
+      video.play().catch(() => {});
+    });
+    pushHistory(entry);
+    // preload immediate neighbors
+    [idx - 1, idx + 1].forEach((n) => preloadShortsItem(n));
+    // free anything more than 2 away to bound memory
+    shortsQueue.forEach((_, i) => { if (Math.abs(i - idx) > 2) unloadShortsItem(i); });
+  }
+  async function preloadShortsItem(idx) {
+    const item = shortsFeed.children[idx];
+    if (!item || item.classList.contains('has-src')) return;
+    const entry = shortsQueue[idx];
+    if (!entry || !entry.kind) return;
+    try {
+      const file = await LTScanner.getEntryFile(entry);
+      const video = item.querySelector('video');
+      video.src = URL.createObjectURL(file);
+      item.classList.add('has-src');
+      video._objectUrl = video.src;
+    } catch (e) {}
+  }
+  function unloadShortsItem(idx) {
+    const item = shortsFeed.children[idx];
+    if (!item || !item.classList.contains('has-src')) return;
+    const video = item.querySelector('video');
+    video.pause();
+    if (video._objectUrl) URL.revokeObjectURL(video._objectUrl);
+    video.removeAttribute('src'); video.load();
+    item.classList.remove('has-src');
+  }
+  function deactivateShortsItem(idx) {
+    const item = shortsFeed.children[idx];
+    if (!item) return;
+    const video = item.querySelector('video');
+    video.pause();
+    item.querySelector('.shorts-center-play').classList.remove('show');
+  }
+
+  function openShortsPlayer(queue, startId) {
+    shortsQueue = queue;
+    shortsIndex = Math.max(0, queue.findIndex(e => e.id === startId));
+    shortsFeed.innerHTML = '';
+    const frag = document.createDocumentFragment();
+    queue.forEach((entry, i) => frag.appendChild(buildShortsItem(entry, i)));
+    shortsFeed.appendChild(frag);
+    Array.from(shortsFeed.children).forEach(el => shortsItemObserver.observe(el));
+    shortsPlayerView.classList.remove('hidden');
+    body.classList.add('shorts-active');
+    shortsFeed.scrollTop = shortsIndex * shortsFeed.clientHeight;
+    activateShortsItem(shortsIndex);
+    updateShortsMuteIcon();
+  }
+  function closeShortsPlayer() {
+    Array.from(shortsFeed.children).forEach((item, i) => { unloadShortsItem(i); shortsItemObserver.unobserve(item); });
+    shortsFeed.innerHTML = '';
+    shortsPlayerView.classList.add('hidden');
+    body.classList.remove('shorts-active');
+    shortsQueue = [];
+  }
+  function updateShortsMuteIcon() {
+    $('shortsIconVolHigh').classList.toggle('hidden', shortsMuted);
+    $('shortsIconVolMute').classList.toggle('hidden', !shortsMuted);
+  }
+  $('shortsMuteBtn').addEventListener('click', () => {
+    shortsMuted = !shortsMuted;
+    updateShortsMuteIcon();
+    const active = shortsFeed.children[shortsIndex];
+    if (active) active.querySelector('video').muted = shortsMuted;
+  });
+  $('shortsBackBtn').addEventListener('click', () => { location.hash = shortsReturnHash; });
+  $('shortsPrevBtn').addEventListener('click', () => shortsFeed.scrollBy({ top: -shortsFeed.clientHeight, behavior: 'smooth' }));
+  $('shortsNextBtn').addEventListener('click', () => shortsFeed.scrollBy({ top: shortsFeed.clientHeight, behavior: 'smooth' }));
+  document.addEventListener('keydown', (e) => {
+    if (shortsPlayerView.classList.contains('hidden')) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); shortsFeed.scrollBy({ top: shortsFeed.clientHeight, behavior: 'smooth' }); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); shortsFeed.scrollBy({ top: -shortsFeed.clientHeight, behavior: 'smooth' }); }
+    else if (e.key === 'Escape') { location.hash = shortsReturnHash; }
+    else if (e.code === 'Space') { e.preventDefault(); const v = shortsFeed.children[shortsIndex]?.querySelector('video'); if (v) { v.paused ? v.play().catch(() => {}) : v.pause(); } }
+  });
+  window.addEventListener('resize', () => { if (!shortsPlayerView.classList.contains('hidden')) shortsFeed.scrollTop = shortsIndex * shortsFeed.clientHeight; });
+
+  function shortsQueueFrom(startId) {
+    const all = shuffleArray(library.filter(e => e.isShort));
+    const idx = all.findIndex(e => e.id === startId);
+    if (idx > 0) { const [item] = all.splice(idx, 1); all.unshift(item); }
+    return all;
+  }
+
   player.onNext = () => playNext();
   player.onEnded = () => { if (autoplayOn && upNextEntries.length) startAutoplayCountdown(); };
   function playNext() { if (upNextEntries.length) location.hash = `#/watch/${encodeURIComponent(upNextEntries[0].id)}`; }
@@ -593,12 +776,25 @@
     return null;
   }
 
+  let lastNonShortsHash = '#/';
   async function router() {
     const hash = location.hash || '#/';
     if (!library.length && !hash.startsWith('#/settings') && !hash.startsWith('#/folders')) {
       Object.values(views).forEach(v => v.classList.add('hidden'));
       if (!roots.length) { emptyState.classList.remove('hidden'); return; }
     }
+    if (hash.startsWith('#/shorts/')) {
+      const id = decodeURIComponent(hash.slice('#/shorts/'.length));
+      const entry = libraryById.get(id);
+      if (!entry) { location.hash = lastNonShortsHash; return; }
+      Object.values(views).forEach(v => v.classList.add('hidden'));
+      emptyState.classList.add('hidden');
+      shortsReturnHash = lastNonShortsHash;
+      openShortsPlayer(shortsQueueFrom(id), id);
+      return;
+    }
+    if (!shortsPlayerView.classList.contains('hidden')) closeShortsPlayer();
+    lastNonShortsHash = hash;
     if (hash.startsWith('#/watch/')) {
       const id = decodeURIComponent(hash.slice('#/watch/'.length));
       const entry = findEntryForWatch(id);

@@ -361,6 +361,25 @@
   </div>
 </main>
 
+<!-- ===================== SHORTS PLAYER (TikTok/Reels-style vertical feed) ===================== -->
+<div id="shortsPlayerView" class="shorts-player hidden">
+  <div class="shorts-player-topbar">
+    <button id="shortsBackBtn" class="icon-btn shorts-icon-btn" aria-label="Back">
+      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <span class="shorts-player-label">Shorts</span>
+    <button id="shortsMuteBtn" class="icon-btn shorts-icon-btn" aria-label="Mute">
+      <svg id="shortsIconVolHigh" viewBox="0 0 24 24"><path d="M4 9v6h4l5 5V4L8 9H4z" fill="#fff"/><path d="M16 8a5 5 0 010 8M18.5 5.5a9 9 0 010 13" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      <svg id="shortsIconVolMute" viewBox="0 0 24 24" class="hidden"><path d="M4 9v6h4l5 5V4L8 9H4z" fill="#fff"/><path d="M16 9l5 6M21 9l-5 6" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div id="shortsFeed" class="shorts-feed"></div>
+  <div class="shorts-nav-arrows desktop-only">
+    <button id="shortsPrevBtn" class="icon-btn shorts-icon-btn" aria-label="Previous short"><svg viewBox="0 0 24 24"><path d="M18 15l-6-6-6 6" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button id="shortsNextBtn" class="icon-btn shorts-icon-btn" aria-label="Next short"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  </div>
+</div>
+
 <!-- Save-to-playlist bottom sheet / modal -->
 <div id="saveModalBackdrop" class="modal-backdrop hidden">
   <div id="saveModal" class="save-modal">

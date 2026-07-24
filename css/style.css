@@ -424,6 +424,82 @@ body.sidebar-collapsed main{ margin-left:var(--sidebar-w-collapsed); }
 /* ============ MOBILE NAV (hidden on desktop) ============ */
 .mobile-nav{ display:none; }
 
+/* ============ SHORTS PLAYER (TikTok/Reels-style) ============ */
+body.shorts-active .topbar, body.shorts-active .sidebar, body.shorts-active .mobile-nav, body.shorts-active .mini-player{ display:none !important; }
+.shorts-player{ position:fixed; inset:0; z-index:500; background:#000; }
+.shorts-player-topbar{
+  position:fixed; top:0; left:0; right:0; z-index:2; display:flex; align-items:center; justify-content:space-between;
+  padding:10px 8px; padding-top:calc(10px + env(safe-area-inset-top));
+  background:linear-gradient(to bottom, rgba(0,0,0,.55), rgba(0,0,0,0)); pointer-events:none;
+}
+.shorts-player-topbar > *{ pointer-events:auto; }
+.shorts-player-label{ color:#fff; font-weight:600; font-size:15px; }
+.shorts-icon-btn{ color:#fff; background:rgba(0,0,0,.25); }
+.shorts-icon-btn:hover{ background:rgba(255,255,255,.2); }
+
+.shorts-feed{
+  height:100%; height:100dvh; overflow-y:scroll; scroll-snap-type:y mandatory; scrollbar-width:none;
+  scroll-behavior:smooth;
+}
+.shorts-feed::-webkit-scrollbar{ display:none; }
+.shorts-item{
+  height:100%; height:100dvh; width:100%; scroll-snap-align:start; scroll-snap-stop:always;
+  position:relative; display:flex; align-items:center; justify-content:center; background:#000; overflow:hidden;
+}
+.shorts-item video{ height:100%; max-width:100%; width:auto; object-fit:contain; background:#000; display:block; }
+.shorts-item:not(.has-src) video{ visibility:hidden; }
+.shorts-item-progress{ position:absolute; top:0; left:0; right:0; height:2.5px; background:rgba(255,255,255,.25); z-index:2; }
+.shorts-item-progress-fill{ height:100%; width:0%; background:#fff; }
+
+.shorts-tap-layer{ position:absolute; inset:0; z-index:1; }
+
+.shorts-info{
+  position:absolute; left:14px; right:88px; bottom:24px; color:#fff; z-index:2;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.shorts-info-channel{ display:flex; align-items:center; gap:8px; margin-bottom:8px; cursor:pointer; }
+.shorts-info-avatar{ width:32px; height:32px; border-radius:50%; flex:0 0 32px; border:1.5px solid #fff; }
+.shorts-info-channel-name{ font-size:14px; font-weight:600; }
+.shorts-info-title{ font-size:14px; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+
+.shorts-rail{
+  position:absolute; right:10px; bottom:28px; z-index:2; display:flex; flex-direction:column; align-items:center; gap:22px;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.shorts-rail-btn{ display:flex; flex-direction:column; align-items:center; gap:4px; background:none; border:none; color:#fff; }
+.shorts-rail-circle{
+  width:46px; height:46px; border-radius:50%; background:rgba(0,0,0,.35); display:flex; align-items:center; justify-content:center;
+  transition:transform .12s ease, background .12s ease;
+}
+.shorts-rail-btn svg{ width:26px; height:26px; }
+.shorts-rail-btn:active .shorts-rail-circle{ transform:scale(.88); }
+.shorts-rail-btn.active .shorts-rail-circle{ background:rgba(255,45,85,.9); }
+.shorts-rail-count{ font-size:11px; font-weight:600; text-shadow:0 1px 2px rgba(0,0,0,.5); }
+
+.shorts-center-play{
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:2; width:64px; height:64px;
+  border-radius:50%; background:rgba(0,0,0,.4); display:flex; align-items:center; justify-content:center; opacity:0;
+  transition:opacity .15s ease; pointer-events:none;
+}
+.shorts-center-play svg{ width:30px; height:30px; color:#fff; }
+.shorts-center-play.show{ opacity:1; }
+
+.shorts-nav-arrows{ position:fixed; right:calc(50% - 240px); bottom:50%; z-index:3; flex-direction:column; gap:10px; }
+.shorts-nav-arrows .icon-btn{ width:44px; height:44px; }
+
+/* desktop: constrain to a tall centered column, like YouTube's Shorts player */
+@media (min-width:901px){
+  .shorts-item video{ max-height:92vh; border-radius:12px; }
+  .shorts-info{ right:96px; max-width:420px; }
+}
+
+@media (max-width:900px){
+  .shorts-nav-arrows{ display:none !important; }
+  .shorts-info{ right:76px; bottom:calc(20px + env(safe-area-inset-bottom)); }
+  .shorts-rail{ right:8px; gap:18px; }
+  .shorts-rail-circle{ width:42px; height:42px; }
+}
+
 /* ================================================================
    MOBILE LAYOUT  (<= 900px)
    ================================================================ */
