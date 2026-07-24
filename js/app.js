@@ -143,7 +143,7 @@
     card.querySelector('.card-avatar').addEventListener('click', (e) => { e.stopPropagation(); location.hash = channelHash(entry.folder); });
     card.querySelector('.card-channel-link').addEventListener('click', (e) => { e.stopPropagation(); location.hash = channelHash(entry.folder); });
     card.addEventListener('click', () => { location.hash = `#/watch/${encodeURIComponent(entry.id)}`; });
-    if (!opts.noObserve) thumbObserver.observe(card.querySelector('.thumb-wrap'));
+    if (!opts.noObserve && !entry.thumb) thumbObserver.observe(card.querySelector('.thumb-wrap'));
     return card;
   }
 
@@ -158,7 +158,7 @@
         <div class="short-title">${escapeHtml(niceTitle(entry.name))}</div>
       </div>`;
     card.addEventListener('click', () => { location.hash = `#/watch/${encodeURIComponent(entry.id)}`; });
-    thumbObserver.observe(card.querySelector('.short-thumb-wrap'));
+    if (!entry.thumb) thumbObserver.observe(card.querySelector('.short-thumb-wrap'));
     return card;
   }
 
@@ -175,17 +175,55 @@
     container.appendChild(frag);
   }
 
+  // Per-container cache of already-built card elements, keyed by entry id.
+  // Re-rendering a grid reuses these nodes (and just repositions them via
+  // appendChild) instead of destroying/recreating <img> elements — that's
+  // what was causing thumbnails to flash blank and "reload" every time you
+  // came back from the watch page.
+  const gridCaches = new WeakMap();
+  function getGridCache(container) {
+    let c = gridCaches.get(container);
+    if (!c) { c = new Map(); gridCaches.set(container, c); }
+    return c;
+  }
+  function refreshCardInPlace(el, entry) {
+    const wrap = el.querySelector('.thumb-wrap') || el.querySelector('.short-thumb-wrap');
+    if (wrap && entry.thumb && !wrap.classList.contains('has-thumb')) {
+      wrap.querySelector('img').src = entry.thumb;
+      wrap.classList.add('has-thumb');
+    }
+    const dur = el.querySelector('.thumb-duration');
+    if (dur) dur.textContent = fmtDuration(entry.duration);
+  }
+
   function renderGrid(container, entries) {
-    container.innerHTML = '';
+    if (!entries.length) { gridCaches.delete(container); container.innerHTML = '<p class="empty-hint">Nothing here yet.</p>'; return; }
+    const cache = getGridCache(container);
+    const wanted = new Set(entries.map(e => e.id));
+    for (const [id, el] of Array.from(cache)) { if (!wanted.has(id)) { el.remove(); cache.delete(id); } }
     const frag = document.createDocumentFragment();
-    entries.forEach(e => frag.appendChild(makeCard(e)));
+    entries.forEach(entry => {
+      let el = cache.get(entry.id);
+      if (el) refreshCardInPlace(el, entry);
+      else { el = makeCard(entry); cache.set(entry.id, el); }
+      frag.appendChild(el);
+    });
+    container.textContent = '';
     container.appendChild(frag);
-    if (!entries.length) container.innerHTML = '<p class="empty-hint">Nothing here yet.</p>';
   }
   function renderShortsRow(container, entries) {
-    container.innerHTML = '';
+    if (!entries.length) { gridCaches.delete(container); container.innerHTML = ''; return; }
+    const cache = getGridCache(container);
+    const wanted = new Set(entries.map(e => e.id));
+    for (const [id, el] of Array.from(cache)) { if (!wanted.has(id)) { el.remove(); cache.delete(id); } }
     const frag = document.createDocumentFragment();
-    entries.forEach(e => frag.appendChild(makeShortCard(e)));
+    entries.forEach(entry => {
+      let el = cache.get(entry.id);
+      if (el) refreshCardInPlace(el, entry);
+      else { el = makeShortCard(entry); cache.set(entry.id, el); }
+      frag.appendChild(el);
+    });
+    container.textContent = '';
     container.appendChild(frag);
   }
   function shuffleArray(arr) {
@@ -604,6 +642,22 @@
 
   shuffleBtn.addEventListener('click', () => { feedOrder = shuffleArray(library.map(e => e.id)); if (!location.hash.startsWith('#/watch')) renderHome(); });
 
+  // Tapping "Home" (logo, sidebar item, or bottom-nav item) while already on
+  // the home view doesn't change the hash, so hashchange never fires — treat
+  // it as an explicit request to scramble the feed and jump to the top.
+  document.querySelectorAll('a[href="#/"]').forEach((link) => {
+    link.addEventListener('click', (e) => {
+      const alreadyHome = (location.hash === '#/' || location.hash === '' || location.hash === '#') && !homeView.classList.contains('hidden');
+      if (alreadyHome) {
+        e.preventDefault();
+        feedOrder = shuffleArray(library.map(e2 => e2.id));
+        activeFolder = 'all';
+        renderHome();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+  });
+
   /* ================= Library management (multi-folder, cache-first) ================= */
   function mergeEntry(entry) {
     const existing = libraryById.get(entry.id);
@@ -622,7 +676,7 @@
     requestAnimationFrame(() => {
       renderScheduled = false;
       feedOrder = feedOrder.filter(id => libraryById.has(id));
-      library.forEach(e => { if (!feedOrder.includes(e.id)) feedOrder.push(e.id); });
+      library.forEach(e => { if (!feedOrder.includes(e.id)) feedOrder.splice(Math.floor(Math.random() * (feedOrder.length + 1)), 0, e.id); });
       const hash = location.hash || '#/';
       emptyState.classList.add('hidden');
       if (hash.startsWith('#/watch') || hash.startsWith('#/settings') || hash.startsWith('#/folders')) return;
